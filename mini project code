@@ -1,0 +1,196 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+using namespace std;
+
+// Class representing an Item (Lost or Found)
+class Item {
+private:
+    int id;
+    string name;
+    string category;
+    string location;
+    string date;
+    string type; // "LOST" or "FOUND"
+    string contact;
+
+public:
+    // Constructor
+    Item(int id, string name, string category, string location, string date, string type, string contact) {
+        this->id = id;
+        this->name = name;
+        this->category = category;
+        this->location = location;
+        this->date = date;
+        this->type = type;
+        this->contact = contact;
+    }
+
+    // Getters
+    int getId() const { return id; }
+    string getName() const { return name; }
+    string getCategory() const { return category; }
+    string getLocation() const { return location; }
+    string getDate() const { return date; }
+    string getType() const { return type; }
+    string getContact() const { return contact; }
+
+    // Display item details
+    void display() const {
+        cout << "----------------------------------------\n";
+        cout << "ID: " << id << " [" << type << "]\n";
+        cout << "Item Name: " << name << "\n";
+        cout << "Category: " << category << "\n";
+        cout << "Location: " << location << "\n";
+        cout << "Date: " << date << "\n";
+        cout << "Contact: " << contact << "\n";
+        cout << "----------------------------------------\n";
+    }
+};
+
+// Class representing the Lost and Found Management System
+class LostAndFoundSystem {
+private:
+    vector<Item> items;
+    int nextId;
+
+    // Helper to convert string to lowercase for case-insensitive matching
+    string toLower(string str) const {
+        transform(str.begin(), str.end(), str.begin(), ::tolower);
+        return str;
+    }
+
+public:
+    LostAndFoundSystem() {
+        nextId = 1;
+    }
+
+    // Report a new Lost or Found item
+    void reportItem() {
+        string name, category, location, date, type, contact;
+        int choice;
+
+        cout << "\n--- Report an Item ---\n";
+        cout << "1. Report Lost Item\n";
+        cout << "2. Report Found Item\n";
+        cout << "Enter choice (1-2): ";
+        cin >> choice;
+        cin.ignore(); // Clear input buffer
+
+        if (choice == 1) {
+            type = "LOST";
+        } else if (choice == 2) {
+            type = "FOUND";
+        } else {
+            cout << "Invalid choice! Returning to main menu.\n";
+            return;
+        }
+
+        cout << "Enter Item Name (e.g., iPhone 13, Blue Wallet): ";
+        getline(cin, name);
+        cout << "Enter Category (e.g., Electronics, Accessories, Books): ";
+        getline(cin, category);
+        cout << "Enter Location: ";
+        getline(cin, location);
+        cout << "Enter Date (DD/MM/YYYY): ";
+        getline(cin, date);
+        cout << "Enter Contact Info (Email/Phone): ";
+        getline(cin, contact);
+
+        items.push_back(Item(nextId++, name, category, location, date, type, contact));
+        cout << "\n[Success] Item registered successfully with ID: " << (nextId - 1) << "\n";
+    }
+
+    // Display all registered items
+    void displayAllItems() const {
+        if (items.empty()) {
+            cout << "\nNo items registered in the system yet.\n";
+            return;
+        }
+
+        cout << "\n========= ALL REGISTERED ITEMS =========\n";
+        for (const auto& item : items) {
+            item.display();
+        }
+    }
+
+    // Smart Matcher Algorithm
+    void findMatches() const {
+        if (items.empty()) {
+            cout << "\nNo items available to match.\n";
+            return;
+        }
+
+        cout << "\n========= SMART POTENTIAL MATCHES =========\n";
+        bool matchFound = false;
+
+        // Compare every LOST item with every FOUND item
+        for (size_t i = 0; i < items.size(); ++i) {
+            if (items[i].getType() != "LOST") continue;
+
+            for (size_t j = 0; j < items.size(); ++j) {
+                if (items[j].getType() != "FOUND") continue;
+
+                // Match criteria: Same category and matching keywords in name/location
+                bool sameCategory = (toLower(items[i].getCategory()) == toLower(items[j].getCategory()));
+                bool sameLocation = (toLower(items[i].getLocation()) == toLower(items[j].getLocation()));
+                bool nameMatch = (toLower(items[i].getName()).find(toLower(items[j].getName())) != string::npos ||
+                                  toLower(items[j].getName()).find(toLower(items[i].getName())) != string::npos);
+
+                if (sameCategory && (nameMatch || sameLocation)) {
+                    matchFound = true;
+                    cout << "\nPotential Match Found!\n";
+                    cout << "------------------------------------\n";
+                    cout << "LOST ITEM:\n";
+                    items[i].display();
+                    cout << "FOUND ITEM:\n";
+                    items[j].display();
+                    cout << "====================================\n";
+                }
+            }
+        }
+
+        if (!matchFound) {
+            cout << "No matching lost and found items found at this time.\n";
+        }
+    }
+};
+
+// Main function with menu loop
+int main() {
+    LostAndFoundSystem system;
+    int choice;
+
+    do {
+        cout << "\n========================================\n";
+        cout << "    SMART LOST AND FOUND MATCHER        \n";
+        cout << "========================================\n";
+        cout << "1. Report Item (Lost / Found)\n";
+        cout << "2. View All Items\n";
+        cout << "3. Run Smart Matcher\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice (1-4): ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                system.reportItem();
+                break;
+            case 2:
+                system.displayAllItems();
+                break;
+            case 3:
+                system.findMatches();
+                break;
+            case 4:
+                cout << "\nThank you for using Smart Lost and Found Matcher. Goodbye!\n";
+                break;
+            default:
+                cout << "\nInvalid choice! Please enter a number between 1 and 4.\n";
+        }
+    } while (choice != 4);
+
+    return 0;
+}
